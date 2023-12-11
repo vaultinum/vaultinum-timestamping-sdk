@@ -2,20 +2,22 @@
 
 This module is a simple client for the Vaultinum's Timestamping service.
 
-## Usage
+## Installation
 
-From the command line:
+This package is available on PyPI :
 
 ```bash
-# Install requirements
-pip install -r requirements.txt
-# Run the module
-python -m vaultinumts --help
+python -m pip install vaultinum-ts
 ```
 
-From python:
+## Usage
+
+```bash
+python -m vaultinum_ts --help
+python -m vaultinum_ts -filename data.txt -environment sandbox -apikey YOUR_SANDBOX_APIKEY
+```
 
 ```python
->>> import vaultinumts
->>> vaultinumts.timestamp("data.txt", "sandbox", "YOUR_SANDBOX_APIKEY")
+>>> from vaultinum_ts import timestamp
+>>> timestamp("data.txt", "sandbox", "YOUR_SANDBOX_APIKEY")
 ```
