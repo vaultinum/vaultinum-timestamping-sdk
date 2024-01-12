@@ -2,6 +2,7 @@
 
 import argparse
 import hashlib
+import json
 import os
 import requests
 import rfc3161ng
@@ -26,12 +27,14 @@ def parse_arguments():
                                    default='sandbox',
                                    choices={'sandbox', 'production'},
                                    help='Vaultinum environment to query')
-    parser.add_argument('-filename',
-                        required=True,
-                        type=str,
-                        help='file to timestamp')
+    input_type_group = parser.add_mutually_exclusive_group(required=True)
+    input_type_group.add_argument(
+        '-sha512', type=str,
+        help='sha512 hash of the data to timestamp')
+    input_type_group.add_argument('-filename',
+                                  type=str,
+                                  help='file to timestamp')
     parser.add_argument('-apikey',
-                        required=False,
                         type=str,
                         help='apikey to use to query the timestamping service')
     return parser.parse_args()
@@ -67,7 +70,7 @@ def timestamp(filename, environment, apikey):
     TS_URL = TS_ENVIRONMENTS[environment]
     print(f'Sending request to the timestamp service: {TS_URL}')
     TS_HEADERS = {
-        'X-API-KEY': apikey,
+        'Bearer': f'Bearer {apikey}',
         'Content-Type': 'application/timestamp-query'
     }
     r = requests.post(TS_URL, headers=TS_HEADERS, data=encoded_tsq)
@@ -86,9 +89,34 @@ def timestamp(filename, environment, apikey):
         output_file.write(r.content)
 
 
+def timestamp_from_hash(hashedMessage, environment, apikey):
+    req_json_body = {
+        'hashAlgorithm': 'SHA512',
+        'hashedMessage': hashedMessage,
+    }
+    TS_HEADERS = {
+        'Authorization': f'Bearer {apikey}',
+        'Content-Type': 'application/json'
+    }
+
+    TS_URL = TS_ENVIRONMENTS[environment]
+    print(f'Sending a json request to the timestamp service: {TS_URL}')
+    r = requests.post(TS_URL, headers=TS_HEADERS,
+                      data=json.dumps(req_json_body))
+
+    if r.status_code != 200:
+        print(
+            f'Error when sending timestamp request: {r.status_code}')
+    else:
+        print(f'Result: {json.loads(r.content)}')
+
+
 def real_main():
     args = parse_arguments()
-    timestamp(args.filename, args.environment, args.apikey)
+    if args.hash:
+        timestamp_from_hash(args.hash, args.environment, args.apikey)
+    else:
+        timestamp(args.filename, args.environment, args.apikey)
 
 
 if __name__ == '__main__':
