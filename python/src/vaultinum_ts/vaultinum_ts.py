@@ -70,7 +70,7 @@ def timestamp(filename, environment, apikey):
     TS_URL = TS_ENVIRONMENTS[environment]
     print(f'Sending request to the timestamp service: {TS_URL}')
     TS_HEADERS = {
-        'Bearer': f'Bearer {apikey}',
+        'Authorization': f'Bearer {apikey}',
         'Content-Type': 'application/timestamp-query'
     }
     r = requests.post(TS_URL, headers=TS_HEADERS, data=encoded_tsq)
